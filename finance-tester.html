@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Finance Dashboard — API Tester</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --bg4: #1e1e28;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #7c6cfa;
+  --accent2: #a78bfa;
+  --accent3: #c4b5fd;
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,0.08);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.08);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251,191,36,0.08);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.08);
+  --text: #e8e8f0;
+  --text2: #9090a8;
+  --text3: #5a5a72;
+  --radius: 10px;
+  --radius2: 14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);z-index:100}
+
+/* LAYOUT */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.logo span{color:var(--accent)}
+.logo-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;letter-spacing:.05em}
+.nav-section{padding:16px 12px 4px;font-size:10px;font-weight:500;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:1px 6px;border-radius:var(--radius);cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border:1px solid transparent}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(124,108,250,0.12);color:var(--accent2);border-color:rgba(124,108,250,0.2)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .15s}
+.nav-item.active .nav-dot{background:var(--accent)}
+.nav-badge{margin-left:auto;font-size:9px;padding:2px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:500}
+.nb-ok{background:var(--green-bg);color:var(--green)}
+.nb-warn{background:var(--yellow-bg);color:var(--yellow)}
+.nb-info{background:var(--blue-bg);color:var(--blue)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.topbar{padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;flex:1}
+.config-group{display:flex;align-items:center;gap:8px}
+.config-label{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap}
+.config-input{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:6px 10px;font-size:12px;color:var(--text);font-family:'DM Mono',monospace;width:200px;outline:none;transition:border .15s}
+.config-input:focus{border-color:var(--accent)}
+.tok-badge{font-size:10px;padding:3px 8px;border-radius:5px;font-family:'DM Mono',monospace;font-weight:500;white-space:nowrap}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:20px}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* PANEL */
+.panel{display:none}
+.panel.active{display:block}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 18px;margin-bottom:14px;transition:border .2s}
+.card:hover{border-color:var(--border2)}
+.card-title{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.card-method{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:3px 7px;border-radius:5px;background:rgba(124,108,250,0.15);color:var(--accent2)}
+.card-path{font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)}
+.card-role{font-size:10px;padding:2px 7px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:500}
+
+/* FORM */
+.frow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.fg{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px}
+.fg label{font-size:10px;color:var(--text3);font-weight:500;font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
+.fg input,.fg select,.fg textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:7px 10px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border .15s;width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg select option{background:var(--bg3)}
+.fg textarea{resize:vertical;min-height:60px}
+
+/* BUTTONS */
+.btn{padding:7px 16px;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:all .15s;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#6b5ce7;border-color:#6b5ce7}
+.btn-danger{background:rgba(248,113,113,0.15);color:var(--red);border-color:rgba(248,113,113,0.3)}
+.btn-danger:hover{background:rgba(248,113,113,0.25)}
+.btn-ghost{background:var(--bg3);color:var(--text2);border-color:var(--border2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+
+/* RESPONSE */
+.res-wrap{margin-top:12px}
+.res-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.status-pill{font-size:11px;padding:3px 9px;border-radius:5px;font-family:'DM Mono',monospace;font-weight:500}
+.s-ok{background:var(--green-bg);color:var(--green)}
+.s-err{background:var(--red-bg);color:var(--red)}
+.s-warn{background:var(--yellow-bg);color:var(--yellow)}
+.res-time{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.res-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto;line-height:1.7}
+.res-box::-webkit-scrollbar{width:3px}
+.res-box::-webkit-scrollbar-thumb{background:var(--border2)}
+.loading-row{display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text3);font-size:13px}
+.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TIP */
+.tip{font-size:12px;color:var(--text2);padding:10px 12px;background:rgba(124,108,250,0.07);border-radius:var(--radius);border-left:3px solid var(--accent);margin-bottom:14px;line-height:1.6}
+
+/* METRICS */
+.metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px}
+.metric-label{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.metric-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:700}
+.mv-green{color:var(--green)}
+.mv-red{color:var(--red)}
+.mv-blue{color:var(--blue)}
+
+/* TX LIST */
+.tx-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.tx-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)}
+.tx-left{display:flex;flex-direction:column;gap:2px}
+.tx-cat{font-size:13px;font-weight:500;color:var(--text)}
+.tx-sub{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.tx-amt{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.amt-in{color:var(--green)}
+.amt-ex{color:var(--red)}
+
+/* FLOW */
+.flow-steps{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+.fstep{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius2);cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s}
+.fstep:hover{background:var(--bg3);border-color:var(--border2)}
+.fstep.fs-active{border-color:rgba(124,108,250,0.4);background:rgba(124,108,250,0.07);color:var(--text)}
+.fstep.fs-done{border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.05);color:var(--green)}
+.fnum{width:24px;height:24px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;font-family:'DM Mono',monospace;flex-shrink:0;border:1px solid var(--border2);color:var(--text3)}
+.fstep.fs-active .fnum{background:var(--accent);border-color:var(--accent);color:#fff}
+.fstep.fs-done .fnum{background:var(--green);border-color:var(--green);color:#0a0a0f}
+
+/* TABS */
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;font-family:'DM Sans',sans-serif}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent);font-weight:500}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* STATUS BAR */
+.statusbar{padding:6px 20px;border-top:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:16px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.sb-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Finance<span>.</span>API</div>
+      <div class="logo-sub">API Tester v1.0</div>
+    </div>
+
+    <div class="nav-section">Start here</div>
+    <div class="nav-item active" data-panel="flow" onclick="nav(this)">
+      <span class="nav-dot"></span>Guided flow
+    </div>
+
+    <div class="nav-section">Auth</div>
+    <div class="nav-item" data-panel="register" onclick="nav(this)">
+      <span class="nav-dot"></span>Register
+    </div>
+    <div class="nav-item" data-panel="login" onclick="nav(this)">
+      <span class="nav-dot"></span>Login
+    </div>
+
+    <div class="nav-section">Users</div>
+    <div class="nav-item" data-panel="users" onclick="nav(this)">
+      <span class="nav-dot"></span>Manage users
+      <span class="nav-badge nb-warn">admin</span>
+    </div>
+
+    <div class="nav-section">Transactions</div>
+    <div class="nav-item" data-panel="txcreate" onclick="nav(this)">
+      <span class="nav-dot"></span>Create
+      <span class="nav-badge nb-info">analyst+</span>
+    </div>
+    <div class="nav-item" data-panel="txlist" onclick="nav(this)">
+      <span class="nav-dot"></span>List &amp; filter
+      <span class="nav-badge nb-ok">all</span>
+    </div>
+    <div class="nav-item" data-panel="txupdate" onclick="nav(this)">
+      <span class="nav-dot"></span>Update
+      <span class="nav-badge nb-info">analyst+</span>
+    </div>
+    <div class="nav-item" data-panel="txdelete" onclick="nav(this)">
+      <span class="nav-dot"></span>Delete
+      <span class="nav-badge nb-warn">admin</span>
+    </div>
+
+    <div class="nav-section">Dashboard</div>
+    <div class="nav-item" data-panel="summary" onclick="nav(this)">
+      <span class="nav-dot"></span>Summary
+      <span class="nav-badge nb-info">analyst+</span>
+    </div>
+    <div class="nav-item" data-panel="analytics" onclick="nav(this)">
+      <span class="nav-dot"></span>Analytics
+      <span class="nav-badge nb-info">analyst+</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <span class="topbar-title" id="ptitle">Guided flow</span>
+      <div class="config-group">
+        <span class="config-label">BASE URL</span>
+        <input class="config-input" id="baseurl" value="http://localhost:5000"/>
+      </div>
+      <div class="config-group">
+        <span class="config-label">TOKEN</span>
+        <input class="config-input" id="tokInput" placeholder="auto-filled after login..." oninput="onTokInput(this.value)" style="width:230px"/>
+        <span class="tok-badge" id="tokBadge" style="display:none"></span>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ======== GUIDED FLOW ======== -->
+      <div class="panel active" id="panel-flow">
+        <div class="tip">Follow steps 1–8 in order. Token and IDs are auto-filled between steps. Each step advances automatically on success.</div>
+        <div class="flow-steps">
+          <div class="fstep fs-active" id="fs1" onclick="gostep(1)"><span class="fnum" id="fn1">1</span>Register admin user</div>
+          <div class="fstep" id="fs2" onclick="gostep(2)"><span class="fnum" id="fn2">2</span>Login &amp; capture JWT token</div>
+          <div class="fstep" id="fs3" onclick="gostep(3)"><span class="fnum" id="fn3">3</span>Register viewer user (for RBAC test)</div>
+          <div class="fstep" id="fs4" onclick="gostep(4)"><span class="fnum" id="fn4">4</span>Create income transaction</div>
+          <div class="fstep" id="fs5" onclick="gostep(5)"><span class="fnum" id="fn5">5</span>Create expense transaction</div>
+          <div class="fstep" id="fs6" onclick="gostep(6)"><span class="fnum" id="fn6">6</span>List all transactions</div>
+          <div class="fstep" id="fs7" onclick="gostep(7)"><span class="fnum" id="fn7">7</span>View dashboard summary</div>
+          <div class="fstep" id="fs8" onclick="gostep(8)"><span class="fnum" id="fn8">8</span>RBAC test — viewer blocked from create</div>
+        </div>
+        <div id="flow-body"></div>
+      </div>
+
+      <!-- ======== REGISTER ======== -->
+      <div class="panel" id="panel-register">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">POST</span>
+            <span class="card-path">/api/auth/register</span>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Name</label><input id="rg-name" value="Alice Admin"/></div>
+            <div class="fg"><label>Email</label><input id="rg-email" value="alice@test.com"/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Password</label><input id="rg-pass" type="password" value="secret123"/></div>
+            <div class="fg"><label>Role</label>
+              <select id="rg-role">
+                <option value="admin">admin</option>
+                <option value="analyst">analyst</option>
+                <option value="viewer">viewer</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doRegister('rg-name','rg-email','rg-pass','rg-role','rg-res')">Send request</button>
+          </div>
+          <div id="rg-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== LOGIN ======== -->
+      <div class="panel" id="panel-login">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">POST</span>
+            <span class="card-path">/api/auth/login</span>
+          </div>
+          <div class="tip">Token is saved globally and auto-attached to all requests after login.</div>
+          <div class="frow">
+            <div class="fg"><label>Email</label><input id="lg-email" value="alice@test.com"/></div>
+            <div class="fg"><label>Password</label><input id="lg-pass" type="password" value="secret123"/></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doLogin('lg-email','lg-pass','lg-res')">Login &amp; save token</button>
+          </div>
+          <div id="lg-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== USERS ======== -->
+      <div class="panel" id="panel-users">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">GET</span>
+            <span class="card-path">/api/users</span>
+            <span class="card-role" style="background:var(--yellow-bg);color:var(--yellow)">admin only</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doGetUsers()">Fetch all users</button>
+          </div>
+          <div id="ug-res"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">PATCH</span>
+            <span class="card-path">/api/users/:id</span>
+            <span class="card-role" style="background:var(--yellow-bg);color:var(--yellow)">admin only</span>
+          </div>
+          <div class="frow">
+            <div class="fg" style="flex:2"><label>User ID</label><input id="uu-id" placeholder="Paste _id from list above"/></div>
+            <div class="fg"><label>New role</label>
+              <select id="uu-role"><option value="viewer">viewer</option><option value="analyst">analyst</option><option value="admin">admin</option></select>
+            </div>
+            <div class="fg"><label>Is active?</label>
+              <select id="uu-active"><option value="true">true</option><option value="false">false</option></select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doUpdateUser()">Update user</button>
+          </div>
+          <div id="uu-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== TX CREATE ======== -->
+      <div class="panel" id="panel-txcreate">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">POST</span>
+            <span class="card-path">/api/transactions</span>
+            <span class="card-role" style="background:var(--blue-bg);color:var(--blue)">analyst / admin</span>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Amount</label><input id="tc-amt" type="number" value="5000" min="0.01" step="0.01"/></div>
+            <div class="fg"><label>Type</label>
+              <select id="tc-type"><option value="income">income</option><option value="expense">expense</option></select>
+            </div>
+            <div class="fg"><label>Category</label><input id="tc-cat" value="Salary"/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Date</label><input id="tc-date" type="date"/></div>
+            <div class="fg"><label>Notes</label><input id="tc-notes" value="Monthly salary"/></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doCreateTx('tc-amt','tc-type','tc-cat','tc-date','tc-notes','tc-res')">Create transaction</button>
+          </div>
+          <div id="tc-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== TX LIST ======== -->
+      <div class="panel" id="panel-txlist">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">GET</span>
+            <span class="card-path">/api/transactions</span>
+            <span class="card-role" style="background:var(--green-bg);color:var(--green)">all roles</span>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Type</label>
+              <select id="tl-type"><option value="">All</option><option value="income">income</option><option value="expense">expense</option></select>
+            </div>
+            <div class="fg"><label>Category</label><input id="tl-cat" placeholder="e.g. Salary"/></div>
+            <div class="fg"><label>Start date</label><input id="tl-start" type="date"/></div>
+            <div class="fg"><label>End date</label><input id="tl-end" type="date"/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Page</label><input id="tl-page" type="number" value="1" min="1" style="max-width:80px"/></div>
+            <div class="fg"><label>Limit</label><input id="tl-limit" type="number" value="10" min="1" style="max-width:80px"/></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doListTx()">Fetch transactions</button>
+          </div>
+          <div id="tl-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== TX UPDATE ======== -->
+      <div class="panel" id="panel-txupdate">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">PATCH</span>
+            <span class="card-path">/api/transactions/:id</span>
+            <span class="card-role" style="background:var(--blue-bg);color:var(--blue)">analyst / admin</span>
+          </div>
+          <div class="tip">Only fill the fields you want to update. Empty fields are ignored.</div>
+          <div class="frow">
+            <div class="fg" style="flex:2"><label>Transaction ID</label><input id="tu-id" placeholder="Auto-filled after create or list"/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>Amount (optional)</label><input id="tu-amt" type="number" placeholder="leave blank to skip" min="0.01" step="0.01"/></div>
+            <div class="fg"><label>Category (optional)</label><input id="tu-cat" placeholder="leave blank to skip"/></div>
+            <div class="fg"><label>Notes (optional)</label><input id="tu-notes" placeholder="leave blank to skip"/></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doUpdateTx()">Update transaction</button>
+          </div>
+          <div id="tu-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== TX DELETE ======== -->
+      <div class="panel" id="panel-txdelete">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">DELETE</span>
+            <span class="card-path">/api/transactions/:id</span>
+            <span class="card-role" style="background:var(--yellow-bg);color:var(--yellow)">admin only</span>
+          </div>
+          <div class="tip">Soft delete — sets isDeleted: true. Record stays in DB but is hidden from all queries.</div>
+          <div class="frow">
+            <div class="fg"><label>Transaction ID</label><input id="td-id" placeholder="Auto-filled after create or list"/></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-danger" onclick="doDeleteTx()">Soft delete</button>
+          </div>
+          <div id="td-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== SUMMARY ======== -->
+      <div class="panel" id="panel-summary">
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-label">Total income</div>
+            <div class="metric-value mv-green" id="m-income">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Total expenses</div>
+            <div class="metric-value mv-red" id="m-expense">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Net balance</div>
+            <div class="metric-value mv-blue" id="m-balance">—</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span class="card-method">GET</span>
+            <span class="card-path">/api/dashboard/summary</span>
+            <span class="card-role" style="background:var(--blue-bg);color:var(--blue)">analyst / admin</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="doSummary('m-income','m-expense','m-balance','sum-res')">Fetch summary</button>
+          </div>
+          <div id="sum-res"></div>
+        </div>
+      </div>
+
+      <!-- ======== ANALYTICS ======== -->
+      <div class="panel" id="panel-analytics">
+        <div class="tab-row">
+          <div class="tab active" onclick="switchTab('cat',this)">Category breakdown</div>
+          <div class="tab" onclick="switchTab('trend',this)">Monthly trends</div>
+          <div class="tab" onclick="switchTab('recent',this)">Recent activity</div>
+        </div>
+        <div class="tab-content active" id="tc-cat">
+          <div class="card">
+            <div class="card-title"><span class="card-method">GET</span><span class="card-path">/api/dashboard/categories</span></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="doCats()">Fetch breakdown</button></div>
+            <div id="cat-res"></div>
+          </div>
+        </div>
+        <div class="tab-content" id="tc-trend">
+          <div class="card">
+            <div class="card-title"><span class="card-method">GET</span><span class="card-path">/api/dashboard/trends</span></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="doTrends()">Fetch trends</button></div>
+            <div id="trend-res"></div>
+          </div>
+        </div>
+        <div class="tab-content" id="tc-recent">
+          <div class="card">
+            <div class="card-title"><span class="card-method">GET</span><span class="card-path">/api/dashboard/recent</span></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="doRecent()">Fetch recent activity</button></div>
+            <div id="recent-res"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="statusbar">
+      <span class="sb-dot" id="srv-dot"></span>
+      <span id="srv-label">server status unknown</span>
+      <span style="margin-left:auto" id="last-action"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+var S = { tok:'', viewerTok:'', lastTxId:'', done:{} };
+var TODAY = new Date().toISOString().slice(0,10);
+document.getElementById('tc-date').value = TODAY;
+
+var TITLES = {flow:'Guided flow',register:'Register user',login:'Login',users:'Manage users',txcreate:'Create transaction',txlist:'List & filter',txupdate:'Update transaction',txdelete:'Delete transaction',summary:'Dashboard summary',analytics:'Analytics'};
+
+function base(){ return (document.getElementById('baseurl').value||'http://localhost:5000').replace(/\/+$/,''); }
+
+function onTokInput(v){
+  S.tok = v.trim();
+  var b = document.getElementById('tokBadge');
+  if(S.tok){ b.style.display='inline-block'; b.className='tok-badge'; b.style.background='rgba(52,211,153,0.12)'; b.style.color='#34d399'; b.textContent='active'; }
+  else { b.style.display='none'; }
+}
+
+function setStatus(ok, label){
+  var dot = document.getElementById('srv-dot');
+  var lbl = document.getElementById('srv-label');
+  dot.className = 'sb-dot' + (ok ? ' on' : '');
+  lbl.textContent = label;
+}
+
+function setLastAction(txt){
+  document.getElementById('last-action').textContent = txt;
+}
+
+function hdrs(withToken){
+  var h = {'Content-Type':'application/json'};
+  if(withToken && S.tok) h['Authorization'] = 'Bearer ' + S.tok;
+  return h;
+}
+
+function loading(id){
+  document.getElementById(id).innerHTML = '<div class="loading-row"><span class="spin"></span>Sending request…</div>';
+}
+
+function showRes(id, status, data, ms){
+  var ok = status>=200 && status<300;
+  var cls = ok ? 's-ok' : (status===401||status===403) ? 's-warn' : 's-err';
+  var label = ok ? 'OK' : 'Error';
+  var time = ms ? '<span class="res-time">'+ms+'ms</span>' : '';
+  document.getElementById(id).innerHTML =
+    '<div class="res-wrap"><div class="res-header"><span class="status-pill '+cls+'">'+status+' '+label+'</span>'+time+'</div>'+
+    '<div class="res-box">'+JSON.stringify(data,null,2)+'</div></div>';
+  setStatus(ok, status + ' ' + (ok?'OK':'Error') + ' — ' + (data.message||''));
+}
+
+async function api(method, path, body, withToken){
+  if(withToken===undefined) withToken=true;
+  var t0 = Date.now();
+  try{
+    var opts = {method:method, headers:hdrs(withToken)};
+    if(body) opts.body = JSON.stringify(body);
+    var r = await fetch(base()+path, opts);
+    var ct = r.headers.get('content-type')||'';
+    var data = ct.includes('json') ? await r.json() : {message: await r.text()};
+    return {status:r.status, data:data, ms:Date.now()-t0};
+  } catch(e){
+    setStatus(false,'Network error');
+    return {status:0, data:{error:'Cannot reach server at '+base(), detail:e.message}, ms:Date.now()-t0};
+  }
+}
+
+function nav(el){
+  document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active')});
+  el.classList.add('active');
+  var p = el.getAttribute('data-panel');
+  document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active')});
+  document.getElementById('panel-'+p).classList.add('active');
+  document.getElementById('ptitle').textContent = TITLES[p]||p;
+}
+
+function switchTab(name,el){
+  document.querySelectorAll('.tab-content').forEach(function(x){x.classList.remove('active')});
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+  document.getElementById('tc-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function autoFillTxId(id){
+  S.lastTxId=id;
+  document.getElementById('tu-id').value=id;
+  document.getElementById('td-id').value=id;
+}
+
+function markStep(n){
+  S.done[n]=true;
+  var s=document.getElementById('fs'+n), nm=document.getElementById('fn'+n);
+  if(s) s.className='fstep fs-done';
+  if(nm) nm.textContent='✓';
+  var nx=n+1, ns=document.getElementById('fs'+nx);
+  if(ns && !S.done[nx]) ns.className='fstep fs-active';
+  setLastAction('Step '+n+' completed ✓');
+}
+
+// ---- AUTH ----
+async function doRegister(nid,eid,pid,rid,resid){
+  loading(resid);
+  var body={name:document.getElementById(nid).value, email:document.getElementById(eid).value, password:document.getElementById(pid).value, role:document.getElementById(rid).value};
+  var {status,data,ms}=await api('POST','/api/auth/register',body,false);
+  showRes(resid,status,data,ms);
+  return {status,data};
+}
+
+async function doLogin(eid,pid,resid){
+  loading(resid);
+  var body={email:document.getElementById(eid).value, password:document.getElementById(pid).value};
+  var {status,data,ms}=await api('POST','/api/auth/login',body,false);
+  showRes(resid,status,data,ms);
+  if(status===200 && data.token){
+    S.tok=data.token;
+    document.getElementById('tokInput').value=data.token;
+    onTokInput(data.token);
+    setStatus(true,'Logged in as '+data.user.email+' ('+data.user.role+')');
+  }
+  return {status,data};
+}
+
+// ---- USERS ----
+async function doGetUsers(){
+  loading('ug-res');
+  var {status,data,ms}=await api('GET','/api/users');
+  showRes('ug-res',status,data,ms);
+  if(status===200 && data.data && data.data.length)
+    document.getElementById('uu-id').value=data.data[0]._id||'';
+}
+
+async function doUpdateUser(){
+  var id=document.getElementById('uu-id').value.trim();
+  if(!id){alert('Paste a user ID first');return;}
+  loading('uu-res');
+  var body={role:document.getElementById('uu-role').value, isActive:document.getElementById('uu-active').value==='true'};
+  var {status,data,ms}=await api('PATCH','/api/users/'+id,body);
+  showRes('uu-res',status,data,ms);
+}
+
+// ---- TRANSACTIONS ----
+async function doCreateTx(amid,tyid,caid,dtid,ntid,resid){
+  loading(resid);
+  var amt=parseFloat(document.getElementById(amid).value);
+  if(isNaN(amt)||amt<=0){showRes(resid,400,{error:'Amount must be a positive number'});return;}
+  var cat=document.getElementById(caid).value.trim();
+  if(!cat){showRes(resid,400,{error:'Category is required'});return;}
+  var body={amount:amt, type:document.getElementById(tyid).value, category:cat, date:document.getElementById(dtid).value, notes:document.getElementById(ntid).value};
+  var {status,data,ms}=await api('POST','/api/transactions',body);
+  showRes(resid,status,data,ms);
+  if(status===201 && data.data && data.data._id) autoFillTxId(data.data._id);
+  return {status,data};
+}
+
+async function doListTx(){
+  loading('tl-res');
+  var p=new URLSearchParams();
+  var ty=document.getElementById('tl-type').value;
+  var ca=document.getElementById('tl-cat').value.trim();
+  var st=document.getElementById('tl-start').value;
+  var en=document.getElementById('tl-end').value;
+  if(ty) p.set('type',ty);
+  if(ca) p.set('category',ca);
+  if(st) p.set('startDate',st);
+  if(en) p.set('endDate',en);
+  p.set('page',document.getElementById('tl-page').value||1);
+  p.set('limit',document.getElementById('tl-limit').value||10);
+  var {status,data,ms}=await api('GET','/api/transactions?'+p.toString());
+  showRes('tl-res',status,data,ms);
+  if(status===200 && data.data && data.data.length && !S.lastTxId)
+    autoFillTxId(data.data[0]._id);
+}
+
+async function doUpdateTx(){
+  var id=document.getElementById('tu-id').value.trim();
+  if(!id){alert('Transaction ID is required');return;}
+  var body={};
+  var amt=document.getElementById('tu-amt').value;
+  var cat=document.getElementById('tu-cat').value.trim();
+  var notes=document.getElementById('tu-notes').value.trim();
+  if(amt!=='') body.amount=parseFloat(amt);
+  if(cat!=='') body.category=cat;
+  if(notes!=='') body.notes=notes;
+  if(!Object.keys(body).length){showRes('tu-res',400,{error:'Provide at least one field to update'});return;}
+  loading('tu-res');
+  var {status,data,ms}=await api('PATCH','/api/transactions/'+id,body);
+  showRes('tu-res',status,data,ms);
+}
+
+async function doDeleteTx(){
+  var id=document.getElementById('td-id').value.trim();
+  if(!id){alert('Transaction ID is required');return;}
+  loading('td-res');
+  var {status,data,ms}=await api('DELETE','/api/transactions/'+id);
+  showRes('td-res',status,data,ms);
+}
+
+// ---- DASHBOARD ----
+async function doSummary(inId,exId,blId,resid){
+  loading(resid);
+  var {status,data,ms}=await api('GET','/api/dashboard/summary');
+  showRes(resid,status,data,ms);
+  if(status===200 && data.data){
+    var d=data.data;
+    document.getElementById(inId).textContent='₹'+(d.totalIncome||0).toLocaleString('en-IN');
+    document.getElementById(exId).textContent='₹'+(d.totalExpenses||0).toLocaleString('en-IN');
+    var bl=d.netBalance||0;
+    var el=document.getElementById(blId);
+    el.textContent=(bl>=0?'+':'')+' ₹'+Math.abs(bl).toLocaleString('en-IN');
+    el.className='metric-value '+(bl>=0?'mv-green':'mv-red');
+  }
+  return {status,data};
+}
+
+async function doCats(){
+  loading('cat-res');
+  var {status,data,ms}=await api('GET','/api/dashboard/categories');
+  if(status===200 && data.data && data.data.length){
+    var rows=data.data.map(function(item){
+      var cat=(item._id&&item._id.category)||'—';
+      var typ=(item._id&&item._id.type)||'';
+      var cls=typ==='income'?'amt-in':'amt-ex';
+      return '<div class="tx-item"><div class="tx-left"><span class="tx-cat">'+cat+'</span><span class="tx-sub">'+typ+'</span></div><span class="tx-amt '+cls+'">₹'+(item.total||0).toLocaleString('en-IN')+'</span></div>';
+    }).join('');
+    document.getElementById('cat-res').innerHTML='<div class="tx-list">'+rows+'</div>';
+  } else showRes('cat-res',status,data,ms);
+}
+
+async function doTrends(){
+  loading('trend-res');
+  var {status,data,ms}=await api('GET','/api/dashboard/trends');
+  showRes('trend-res',status,data,ms);
+}
+
+async function doRecent(){
+  loading('recent-res');
+  var {status,data,ms}=await api('GET','/api/dashboard/recent');
+  if(status===200 && data.data && data.data.length){
+    var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var rows=data.data.map(function(tx){
+      var d=new Date(tx.date);
+      var ds=MN[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+      var name=(tx.createdBy&&tx.createdBy.name)||'';
+      var cls=tx.type==='income'?'amt-in':'amt-ex';
+      return '<div class="tx-item"><div class="tx-left"><span class="tx-cat">'+(tx.category||'—')+'</span><span class="tx-sub">'+ds+(name?' · '+name:'')+'</span></div><span class="tx-amt '+cls+'">₹'+(tx.amount||0).toLocaleString('en-IN')+'</span></div>';
+    }).join('');
+    document.getElementById('recent-res').innerHTML='<div class="tx-list">'+rows+'</div>';
+  } else showRes('recent-res',status,data,ms);
+}
+
+// ---- GUIDED FLOW ----
+var FLOW = {
+  1: '<div class="card"><div class="card-title"><span class="card-method">POST</span><span class="card-path">/api/auth/register</span></div><div class="frow"><div class="fg"><label>Name</label><input id="f1n" value="Alice Admin"/></div><div class="fg"><label>Email</label><input id="f1e" value="alice@test.com"/></div></div><div class="frow"><div class="fg"><label>Password</label><input id="f1p" type="password" value="secret123"/></div><div class="fg"><label>Role</label><select id="f1r"><option value="admin">admin</option><option value="analyst">analyst</option></select></div></div><div class="btn-row"><button class="btn btn-primary" onclick="f1()">Register admin</button></div><div id="f1-res"></div></div>',
+  2: '<div class="card"><div class="card-title"><span class="card-method">POST</span><span class="card-path">/api/auth/login</span></div><div class="frow"><div class="fg"><label>Email</label><input id="f2e" value="alice@test.com"/></div><div class="fg"><label>Password</label><input id="f2p" type="password" value="secret123"/></div></div><div class="btn-row"><button class="btn btn-primary" onclick="f2()">Login</button></div><div id="f2-res"></div></div>',
+  3: '<div class="card"><div class="card-title"><span class="card-method">POST</span><span class="card-path">/api/auth/register</span></div><div class="tip">Register a viewer to test RBAC in step 8.</div><div class="frow"><div class="fg"><label>Name</label><input id="f3n" value="Bob Viewer"/></div><div class="fg"><label>Email</label><input id="f3e" value="bob@test.com"/></div></div><div class="frow"><div class="fg"><label>Password</label><input id="f3p" type="password" value="viewer123"/></div><div class="fg"><label>Role</label><select id="f3r"><option value="viewer">viewer</option></select></div></div><div class="btn-row"><button class="btn btn-primary" onclick="f3()">Register viewer</button></div><div id="f3-res"></div></div>',
+  4: '<div class="card"><div class="card-title"><span class="card-method">POST</span><span class="card-path">/api/transactions</span><span style="font-size:11px;margin-left:4px;color:var(--green)">income</span></div><div class="frow"><div class="fg"><label>Amount</label><input id="f4a" type="number" value="8000"/></div><div class="fg"><label>Category</label><input id="f4c" value="Salary"/></div><div class="fg"><label>Notes</label><input id="f4n" value="Monthly salary"/></div></div><div class="btn-row"><button class="btn btn-primary" onclick="f4()">Create income</button></div><div id="f4-res"></div></div>',
+  5: '<div class="card"><div class="card-title"><span class="card-method">POST</span><span class="card-path">/api/transactions</span><span style="font-size:11px;margin-left:4px;color:var(--red)">expense</span></div><div class="frow"><div class="fg"><label>Amount</label><input id="f5a" type="number" value="3000"/></div><div class="fg"><label>Category</label><input id="f5c" value="Rent"/></div><div class="fg"><label>Notes</label><input id="f5n" value="Monthly rent"/></div></div><div class="btn-row"><button class="btn btn-primary" onclick="f5()">Create expense</button></div><div id="f5-res"></div></div>',
+  6: '<div class="card"><div class="card-title"><span class="card-method">GET</span><span class="card-path">/api/transactions</span></div><div class="btn-row"><button class="btn btn-primary" onclick="f6()">Fetch all transactions</button></div><div id="f6-res"></div></div>',
+  7: '<div class="card"><div class="card-title"><span class="card-method">GET</span><span class="card-path">/api/dashboard/summary</span></div><div class="metric-grid"><div class="metric"><div class="metric-label">Total income</div><div class="metric-value mv-green" id="f7i">—</div></div><div class="metric"><div class="metric-label">Total expenses</div><div class="metric-value mv-red" id="f7e">—</div></div><div class="metric"><div class="metric-label">Net balance</div><div class="metric-value mv-blue" id="f7b">—</div></div></div><div class="btn-row"><button class="btn btn-primary" onclick="f7()">Fetch summary</button></div><div id="f7-res"></div></div>',
+  8: '<div class="card"><div class="card-title">RBAC test — viewer blocked</div><div class="tip">Step 1: Login as viewer. Step 2: Try to create a transaction. Expected: <strong style="color:var(--yellow)">403 Forbidden</strong>.</div><div class="btn-row"><button class="btn btn-ghost" onclick="f8login()" style="margin-right:4px">1. Login as viewer</button><button class="btn btn-danger" onclick="f8create()">2. Try create (expect 403)</button></div><div id="f8-res"></div></div>'
+};
+
+function gostep(n){
+  document.getElementById('flow-body').innerHTML = FLOW[n]||'';
+  document.querySelectorAll('.fstep').forEach(function(x){
+    if(!x.classList.contains('fs-done')) x.classList.remove('fs-active');
+  });
+  var cur=document.getElementById('fs'+n);
+  if(cur && !cur.classList.contains('fs-done')) cur.classList.add('fs-active');
+}
+gostep(1);
+
+async function f1(){
+  var r=await doRegister('f1n','f1e','f1p','f1r','f1-res');
+  if(r&&r.status===201){markStep(1);setTimeout(function(){gostep(2);},700);}
+}
+async function f2(){
+  loading('f2-res');
+  var body={email:document.getElementById('f2e').value,password:document.getElementById('f2p').value};
+  var {status,data,ms}=await api('POST','/api/auth/login',body,false);
+  showRes('f2-res',status,data,ms);
+  if(status===200&&data.token){
+    S.tok=data.token;
+    document.getElementById('tokInput').value=data.token;
+    onTokInput(data.token);
+    setStatus(true,'Logged in as '+data.user.email+' ('+data.user.role+')');
+    markStep(2);setTimeout(function(){gostep(3);},700);
+  }
+}
+async function f3(){
+  var r=await doRegister('f3n','f3e','f3p','f3r','f3-res');
+  if(r&&r.status===201){markStep(3);setTimeout(function(){gostep(4);},700);}
+}
+async function f4(){
+  loading('f4-res');
+  var body={amount:parseFloat(document.getElementById('f4a').value),type:'income',category:document.getElementById('f4c').value,date:TODAY,notes:document.getElementById('f4n').value};
+  var {status,data,ms}=await api('POST','/api/transactions',body);
+  showRes('f4-res',status,data,ms);
+  if(status===201&&data.data&&data.data._id){autoFillTxId(data.data._id);markStep(4);setTimeout(function(){gostep(5);},700);}
+}
+async function f5(){
+  loading('f5-res');
+  var body={amount:parseFloat(document.getElementById('f5a').value),type:'expense',category:document.getElementById('f5c').value,date:TODAY,notes:document.getElementById('f5n').value};
+  var {status,data,ms}=await api('POST','/api/transactions',body);
+  showRes('f5-res',status,data,ms);
+  if(status===201&&data.data&&data.data._id){autoFillTxId(data.data._id);markStep(5);setTimeout(function(){gostep(6);},700);}
+}
+async function f6(){
+  loading('f6-res');
+  var {status,data,ms}=await api('GET','/api/transactions?page=1&limit=10');
+  showRes('f6-res',status,data,ms);
+  if(status===200){markStep(6);setTimeout(function(){gostep(7);},700);}
+}
+async function f7(){
+  loading('f7-res');
+  var {status,data,ms}=await api('GET','/api/dashboard/summary');
+  showRes('f7-res',status,data,ms);
+  if(status===200&&data.data){
+    var d=data.data;
+    document.getElementById('f7i').textContent='₹'+(d.totalIncome||0).toLocaleString('en-IN');
+    document.getElementById('f7e').textContent='₹'+(d.totalExpenses||0).toLocaleString('en-IN');
+    var bl=d.netBalance||0;
+    var el=document.getElementById('f7b');
+    el.textContent=(bl>=0?'+':'')+' ₹'+Math.abs(bl).toLocaleString('en-IN');
+    el.className='metric-value '+(bl>=0?'mv-green':'mv-red');
+    markStep(7);setTimeout(function(){gostep(8);},700);
+  }
+}
+async function f8login(){
+  loading('f8-res');
+  var {status,data,ms}=await api('POST','/api/auth/login',{email:'bob@test.com',password:'viewer123'},false);
+  showRes('f8-res',status,data,ms);
+  if(status===200&&data.token) S.viewerTok=data.token;
+}
+async function f8create(){
+  loading('f8-res');
+  var saved=S.tok;
+  S.tok=S.viewerTok||S.tok;
+  var {status,data,ms}=await api('POST','/api/transactions',{amount:100,type:'income',category:'Test'});
+  S.tok=saved;
+  showRes('f8-res',status,data,ms);
+  if(status===403) markStep(8);
+}
+
+// ping server on load
+(async function(){
+  try{
+    var r=await fetch(base()+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(3000)});
+    setStatus(true,'Server reachable on '+base());
+  }catch(e){
+    setStatus(false,'Cannot reach server — run: npm run dev');
+  }
+})();
+</script>
+</body>
+</html>
